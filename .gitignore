@@ -1,0 +1,10 @@
+wheels/
+__pycache__/
+*.pyc
+*.db
+.env
+.venv/
+venv/
+*.egg-info/
+dist/
+.pytest_cache/

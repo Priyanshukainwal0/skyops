@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: skyops-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_PATH=/data/skyops.db
+    volumes:
+      - api-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  monitor-worker:
+    build: ./monitor-worker
+    container_name: skyops-worker
+    environment:
+      - API_URL=http://api-gateway:8000
+      - CHECK_INTERVAL=30
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web-dashboard:
+    build: ./web-dashboard
+    container_name: skyops-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+volumes:
+  api-data:

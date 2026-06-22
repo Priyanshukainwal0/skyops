@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SkyOps — Uptime Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0f1e; --surface: #111827; --card: #1e293b;
+    --border: #334155; --blue: #3b82f6; --green: #22c55e;
+    --red: #ef4444; --yellow: #f59e0b; --text: #f1f5f9;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+
+  /* NAV */
+  nav { background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .nav-brand { font-weight: 700; font-size: 18px; color: var(--blue); letter-spacing: -.3px; }
+  .nav-brand span { color: var(--text); }
+  .nav-status { font-size: 12px; color: var(--muted); }
+
+  /* LAYOUT */
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+
+  /* STATS ROW */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 700; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.blue { color: var(--blue); }
+
+  /* ADD SERVICE */
+  .add-form { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 28px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .add-form label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 4px; }
+  .add-form input { background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; border-radius: 8px; font-size: 14px; width: 220px; outline: none; }
+  .add-form input:focus { border-color: var(--blue); }
+  .btn { padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 4px 10px; font-size: 12px; }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  /* SERVICE TABLE */
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .08em; margin-bottom: 12px; }
+  .services { display: grid; gap: 12px; }
+  .service-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .svc-left { display: flex; align-items: center; gap: 14px; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-up { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot-down { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .dot-timeout { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+  .dot-unknown { background: var(--border); }
+  .svc-name { font-weight: 600; font-size: 15px; }
+  .svc-url { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .svc-right { display: flex; align-items: center; gap: 16px; }
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .badge-up { background: rgba(34,197,94,.15); color: var(--green); }
+  .badge-down { background: rgba(239,68,68,.15); color: var(--red); }
+  .badge-timeout { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .badge-unknown { background: rgba(148,163,184,.1); color: var(--muted); }
+  .latency { font-size: 13px; color: var(--muted); min-width: 64px; text-align: right; }
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .refresh-bar { font-size: 11px; color: var(--muted); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">Sky<span>Ops</span></div>
+  <div class="nav-status" id="nav-status">Loading...</div>
+</nav>
+<main>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Total Services</div><div class="stat-value blue" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Up</div><div class="stat-value green" id="stat-up">—</div></div>
+    <div class="stat-card"><div class="stat-label">Down / Timeout</div><div class="stat-value red" id="stat-down">—</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Latency</div><div class="stat-value blue" id="stat-latency">—</div></div>
+  </div>
+
+  <div class="add-form">
+    <div><label>Service Name</label><input id="inp-name" type="text" placeholder="My API" /></div>
+    <div><label>URL to Monitor</label><input id="inp-url" type="text" placeholder="https://example.com/health" style="width:300px" /></div>
+    <button class="btn btn-primary" onclick="addService()">+ Add Service</button>
+  </div>
+
+  <div class="refresh-bar">
+    <span class="section-title">Monitored Services</span>
+    <span id="last-refresh">—</span>
+  </div>
+  <div class="services" id="services-list">
+    <div class="empty">Loading services...</div>
+  </div>
+</main>
+
+<script>
+  const API = window.API_URL || 'http://localhost:8000';
+
+  async function fetchServices() {
+    try {
+      const res = await fetch(`${API}/api/services`);
+      const data = await res.json();
+      renderServices(data);
+      updateStats(data);
+      document.getElementById('last-refresh').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+      document.getElementById('nav-status').textContent = 'Connected';
+    } catch (e) {
+      document.getElementById('nav-status').textContent = 'API unreachable';
+    }
+  }
+
+  function statusClass(s) {
+    if (s === 'up') return 'up';
+    if (s === 'down') return 'down';
+    if (s === 'timeout') return 'timeout';
+    return 'unknown';
+  }
+
+  function renderServices(services) {
+    const el = document.getElementById('services-list');
+    if (!services.length) { el.innerHTML = '<div class="empty">No services added yet. Add one above.</div>'; return; }
+    el.innerHTML = services.map(s => {
+      const sc = statusClass(s.last_status);
+      const lat = s.last_latency_ms != null ? `${Math.round(s.last_latency_ms)}ms` : '—';
+      return `
+        <div class="service-card">
+          <div class="svc-left">
+            <div class="status-dot dot-${sc}"></div>
+            <div>
+              <div class="svc-name">${esc(s.name)}</div>
+              <div class="svc-url">${esc(s.url)}</div>
+            </div>
+          </div>
+          <div class="svc-right">
+            <span class="latency">${lat}</span>
+            <span class="badge badge-${sc}">${s.last_status || 'pending'}</span>
+            <button class="btn btn-danger" onclick="deleteService(${s.id})">Remove</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function updateStats(services) {
+    const up = services.filter(s => s.last_status === 'up').length;
+    const down = services.filter(s => s.last_status === 'down' || s.last_status === 'timeout').length;
+    const latencies = services.filter(s => s.last_latency_ms != null).map(s => s.last_latency_ms);
+    const avg = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : null;
+    document.getElementById('stat-total').textContent = services.length;
+    document.getElementById('stat-up').textContent = up;
+    document.getElementById('stat-down').textContent = down;
+    document.getElementById('stat-latency').textContent = avg != null ? `${avg}ms` : '—';
+  }
+
+  async function addService() {
+    const name = document.getElementById('inp-name').value.trim();
+    const url = document.getElementById('inp-url').value.trim();
+    if (!name || !url) return alert('Both name and URL are required.');
+    await fetch(`${API}/api/services`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, url }),
+    });
+    document.getElementById('inp-name').value = '';
+    document.getElementById('inp-url').value = '';
+    fetchServices();
+  }
+
+  async function deleteService(id) {
+    if (!confirm('Remove this service?')) return;
+    await fetch(`${API}/api/services/${id}`, { method: 'DELETE' });
+    fetchServices();
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  fetchServices();
+  setInterval(fetchServices, 15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-dashboard
+  namespace: skyops
+  labels:
+    app: web-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-dashboard
+  template:
+    metadata:
+      labels:
+        app: web-dashboard
+    spec:
+      containers:
+        - name: web-dashboard
+          image: skyops-web-dashboard:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-dashboard
+  namespace: skyops
+spec:
+  selector:
+    app: web-dashboard
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
