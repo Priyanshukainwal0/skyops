@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SkyOps — Uptime Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --bg: #0a0f1e; --surface: #111827; --card: #1e293b;
@@ -14,17 +15,14 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
 
-  /* NAV */
   nav { background: var(--surface); border-bottom: 1px solid var(--border);
     padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
   .nav-brand { font-weight: 700; font-size: 18px; color: var(--blue); letter-spacing: -.3px; }
   .nav-brand span { color: var(--text); }
   .nav-status { font-size: 12px; color: var(--muted); }
 
-  /* LAYOUT */
   main { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
 
-  /* STATS ROW */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
   .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
   .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
@@ -33,7 +31,6 @@
   .stat-value.red { color: var(--red); }
   .stat-value.blue { color: var(--blue); }
 
-  /* ADD SERVICE */
   .add-form { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
     padding: 20px; margin-bottom: 28px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
   .add-form label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 4px; }
@@ -46,12 +43,11 @@
   .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 4px 10px; font-size: 12px; }
   .btn-danger:hover { background: var(--red); color: #fff; }
 
-  /* SERVICE TABLE */
-  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .08em; margin-bottom: 12px; }
-  .services { display: grid; gap: 12px; }
-  .service-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+  .services { display: grid; gap: 16px; }
+
+  .service-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .svc-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
   .svc-left { display: flex; align-items: center; gap: 14px; }
   .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .dot-up { background: var(--green); box-shadow: 0 0 8px var(--green); }
@@ -67,6 +63,17 @@
   .badge-timeout { background: rgba(245,158,11,.15); color: var(--yellow); }
   .badge-unknown { background: rgba(148,163,184,.1); color: var(--muted); }
   .latency { font-size: 13px; color: var(--muted); min-width: 64px; text-align: right; }
+
+  .chart-container { position: relative; height: 120px; width: 100%; }
+  .chart-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+  .uptime-bar { display: flex; gap: 2px; margin-top: 12px; }
+  .uptime-tick { flex: 1; height: 6px; border-radius: 2px; }
+  .tick-up { background: var(--green); }
+  .tick-down { background: var(--red); }
+  .tick-timeout { background: var(--yellow); }
+  .tick-unknown { background: var(--border); }
+
   .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
   .refresh-bar { font-size: 11px; color: var(--muted); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
 </style>
@@ -101,12 +108,13 @@
 
 <script>
   const API = window.API_URL || '';
+  const charts = {};
 
   async function fetchServices() {
     try {
       const res = await fetch(`${API}/api/services`);
       const data = await res.json();
-      renderServices(data);
+      await renderServices(data);
       updateStats(data);
       document.getElementById('last-refresh').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
       document.getElementById('nav-status').textContent = 'Connected';
@@ -122,28 +130,111 @@
     return 'unknown';
   }
 
-  function renderServices(services) {
+  async function renderServices(services) {
     const el = document.getElementById('services-list');
-    if (!services.length) { el.innerHTML = '<div class="empty">No services added yet. Add one above.</div>'; return; }
-    el.innerHTML = services.map(s => {
+    if (!services.length) {
+      el.innerHTML = '<div class="empty">No services added yet. Add one above.</div>';
+      return;
+    }
+
+    for (const s of services) {
       const sc = statusClass(s.last_status);
       const lat = s.last_latency_ms != null ? `${Math.round(s.last_latency_ms)}ms` : '—';
-      return `
-        <div class="service-card">
-          <div class="svc-left">
-            <div class="status-dot dot-${sc}"></div>
-            <div>
-              <div class="svc-name">${esc(s.name)}</div>
-              <div class="svc-url">${esc(s.url)}</div>
+      const cardId = `svc-card-${s.id}`;
+
+      if (!document.getElementById(cardId)) {
+        const div = document.createElement('div');
+        div.className = 'service-card';
+        div.id = cardId;
+        div.innerHTML = `
+          <div class="svc-header">
+            <div class="svc-left">
+              <div class="status-dot dot-${sc}" id="dot-${s.id}"></div>
+              <div>
+                <div class="svc-name">${esc(s.name)}</div>
+                <div class="svc-url">${esc(s.url)}</div>
+              </div>
+            </div>
+            <div class="svc-right">
+              <span class="latency" id="lat-${s.id}">${lat}</span>
+              <span class="badge badge-${sc}" id="badge-${s.id}">${s.last_status || 'pending'}</span>
+              <button class="btn btn-danger" onclick="deleteService(${s.id})">Remove</button>
             </div>
           </div>
-          <div class="svc-right">
-            <span class="latency">${lat}</span>
-            <span class="badge badge-${sc}">${s.last_status || 'pending'}</span>
-            <button class="btn btn-danger" onclick="deleteService(${s.id})">Remove</button>
-          </div>
-        </div>`;
-    }).join('');
+          <div class="chart-label">Latency over last 30 checks (ms)</div>
+          <div class="chart-container"><canvas id="chart-${s.id}"></canvas></div>
+          <div class="uptime-bar" id="uptime-${s.id}"></div>`;
+        el.appendChild(div);
+      } else {
+        document.getElementById(`dot-${s.id}`).className = `status-dot dot-${sc}`;
+        document.getElementById(`lat-${s.id}`).textContent = lat;
+        const badge = document.getElementById(`badge-${s.id}`);
+        badge.className = `badge badge-${sc}`;
+        badge.textContent = s.last_status || 'pending';
+      }
+
+      await loadChart(s.id);
+    }
+
+    // remove cards for deleted services
+    const ids = services.map(s => `svc-card-${s.id}`);
+    [...el.children].forEach(c => { if (!ids.includes(c.id)) c.remove(); });
+  }
+
+  async function loadChart(serviceId) {
+    try {
+      const res = await fetch(`${API}/api/checks/${serviceId}?limit=30`);
+      const checks = (await res.json()).reverse();
+
+      const labels = checks.map(c => new Date(c.checked_at).toLocaleTimeString());
+      const latencies = checks.map(c => c.latency_ms != null ? Math.round(c.latency_ms) : null);
+
+      // uptime bar
+      const bar = document.getElementById(`uptime-${serviceId}`);
+      if (bar) {
+        bar.innerHTML = checks.map(c => `<div class="uptime-tick tick-${statusClass(c.status)}" title="${c.status} @ ${new Date(c.checked_at).toLocaleTimeString()}"></div>`).join('');
+      }
+
+      const canvas = document.getElementById(`chart-${serviceId}`);
+      if (!canvas) return;
+
+      if (charts[serviceId]) {
+        charts[serviceId].data.labels = labels;
+        charts[serviceId].data.datasets[0].data = latencies;
+        charts[serviceId].update('none');
+        return;
+      }
+
+      charts[serviceId] = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Latency (ms)',
+            data: latencies,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.1)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: latencies.map((_, i) =>
+              checks[i]?.status === 'up' ? '#22c55e' : checks[i]?.status === 'down' ? '#ef4444' : '#f59e0b'
+            ),
+            tension: 0.4,
+            fill: true,
+            spanGaps: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', maxTicksLimit: 6, font: { size: 10 } }, grid: { color: '#1e293b' } },
+            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true }
+          }
+        }
+      });
+    } catch (e) {}
   }
 
   function updateStats(services) {
@@ -173,6 +264,8 @@
   async function deleteService(id) {
     if (!confirm('Remove this service?')) return;
     await fetch(`${API}/api/services/${id}`, { method: 'DELETE' });
+    document.getElementById(`svc-card-${id}`)?.remove();
+    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
     fetchServices();
   }
 
