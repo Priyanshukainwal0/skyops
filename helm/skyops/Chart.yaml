@@ -1,0 +1,12 @@
+apiVersion: v2
+name: skyops
+description: Cloud uptime monitoring system — 3-service microservices stack
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - monitoring
+  - uptime
+  - microservices
+maintainers:
+  - name: Priyanshukainwal0

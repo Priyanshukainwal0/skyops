@@ -1,0 +1,46 @@
+image:
+  registry: ghcr.io/priyanshukainwal0
+  tag: latest
+  pullPolicy: IfNotPresent
+
+apiGateway:
+  replicas: 2
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 60
+
+monitorWorker:
+  checkInterval: "30"
+  requestTimeout: "10"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+webDashboard:
+  replicas: 1
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+    limits:
+      cpu: "100m"
+      memory: "64Mi"
+
+ingress:
+  enabled: true
+  host: skyops.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /

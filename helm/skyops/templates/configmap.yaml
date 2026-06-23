@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skyops-config
+  namespace: skyops
+  labels:
+    {{- include "skyops.labels" . | nindent 4 }}
+data:
+  CHECK_INTERVAL: {{ .Values.monitorWorker.checkInterval | quote }}
+  REQUEST_TIMEOUT: {{ .Values.monitorWorker.requestTimeout | quote }}
+  API_URL: "http://api-gateway:8000"

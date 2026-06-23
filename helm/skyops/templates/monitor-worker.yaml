@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitor-worker
+  namespace: skyops
+  labels:
+    app: monitor-worker
+    {{- include "skyops.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monitor-worker
+  template:
+    metadata:
+      labels:
+        app: monitor-worker
+    spec:
+      containers:
+        - name: monitor-worker
+          image: {{ .Values.image.registry }}/skyops-monitor-worker:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: skyops-config
+          resources:
+            {{- toYaml .Values.monitorWorker.resources | nindent 12 }}
