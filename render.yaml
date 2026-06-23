@@ -6,8 +6,8 @@ services:
     dockerContext: ./api-gateway
     plan: free
     envVars:
-      - key: DB_PATH
-        value: /tmp/skyops.db
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_y6Jw7jRBPHaI@ep-soft-term-atoevl56.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require
       - key: REQUEST_TIMEOUT
         value: "10"
       - key: CHECK_INTERVAL
