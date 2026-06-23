@@ -151,15 +151,35 @@ main { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
 .stack-role { font-size: 11px; color: var(--muted); }
 
 /* ── ARCHITECTURE ── */
-.arch-box {
-  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px;
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted2);
-  line-height: 1.8; overflow-x: auto;
+.arch-flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; align-items: stretch; }
+.arch-node {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  display: flex; flex-direction: column; gap: 10px; position: relative;
+  transition: border-color .2s, transform .2s;
 }
-.arch-box .hl { color: var(--cyan); }
-.arch-box .hl2 { color: var(--blue2); }
-.arch-box .hl3 { color: var(--green); }
-.arch-box .hl4 { color: var(--yellow); }
+.arch-node:hover { border-color: var(--blue); transform: translateY(-3px); }
+.arch-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 20px; padding: 0 4px; flex-shrink: 0;
+}
+.arch-icon { font-size: 28px; margin-bottom: 4px; }
+.arch-node-title { font-weight: 700; font-size: 14px; }
+.arch-node-sub { font-size: 11px; color: var(--muted2); line-height: 1.6; }
+.arch-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.arch-chip { font-size: 10px; padding: 2px 7px; border-radius: 5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.chip-cyan { background: rgba(34,211,238,.12); color: var(--cyan); }
+.chip-blue { background: rgba(59,130,246,.12); color: var(--blue2); }
+.chip-purple { background: rgba(168,85,247,.12); color: var(--purple); }
+.chip-green { background: rgba(34,197,94,.12); color: var(--green); }
+.chip-yellow { background: rgba(245,158,11,.12); color: var(--yellow); }
+.chip-pink { background: rgba(236,72,153,.12); color: var(--pink); }
+.arch-row { display: flex; align-items: stretch; gap: 0; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+.arch-row + .arch-row { margin-top: 12px; }
+.arch-connector {
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 18px; padding: 6px 0;
+}
+.arch-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
 
 /* ── MONITORING ── */
 .service-card {
@@ -459,23 +479,110 @@ footer span { color: var(--blue2); }
     <div class="section-header">
       <div class="section-title">System Architecture</div>
     </div>
-    <div class="arch-box">
-<span class="hl">┌─ Developer Machine ──────────────────────────────────────────────────┐</span>
-│                                                                        │
-│  <span class="hl2">git push</span> ──► <span class="hl">GitHub</span> ──► <span class="hl">GitHub Actions CI</span>                           │
-│                              │   ├─ lint + pytest                     │
-│                              │   ├─ docker build &amp; push ──► <span class="hl2">Docker Hub</span>  │
-│                              │   └─ ✓ green                           │
-│                              │                                        │
-│  <span class="hl3">k3d local cluster</span>            └──► <span class="hl3">Render auto-deploy</span>               │
-│  ├─ skyops namespace                  └─ api-gateway (Docker)         │
-│  ├─ Helm chart (skyops)                  └─ Neon PostgreSQL           │
-│  │   ├─ api-gateway Deployment                                        │
-│  │   ├─ Prometheus (sub-chart)   <span class="hl4">TicketDesk</span>                           │
-│  │   ├─ Grafana (sub-chart)      └─ FastAPI + Neon PostgreSQL         │
-│  │   └─ Ingress                      └─ monitored by SkyOps           │
-│  └─ kubectl / helm CLI                                                │
-<span class="hl">└────────────────────────────────────────────────────────────────────────┘</span>
+
+    <!-- Row 1: Code → CI/CD → Registry -->
+    <div class="arch-label">Source → Build → Publish</div>
+    <div class="arch-row">
+      <div class="arch-node">
+        <div class="arch-icon">👨‍💻</div>
+        <div class="arch-node-title">Developer</div>
+        <div class="arch-node-sub">Writes code locally, runs Docker Compose for dev, commits changes</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-cyan">git push</span>
+          <span class="arch-chip chip-blue">Docker Compose</span>
+        </div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-icon">🐙</div>
+        <div class="arch-node-title">GitHub</div>
+        <div class="arch-node-sub">Source of truth. Triggers GitHub Actions CI on every push to main</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-purple">Actions trigger</span>
+          <span class="arch-chip chip-blue">main branch</span>
+        </div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-icon">⚙️</div>
+        <div class="arch-node-title">GitHub Actions CI</div>
+        <div class="arch-node-sub">Runs lint, pytest, builds Docker image, pushes to Docker Hub on green</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-purple">pytest ✓</span>
+          <span class="arch-chip chip-cyan">docker build</span>
+          <span class="arch-chip chip-green">Run #3 ✓</span>
+        </div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-icon">🐳</div>
+        <div class="arch-node-title">Docker Hub</div>
+        <div class="arch-node-sub">Container registry stores the built image. Used by both Render and k3d</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-cyan">api-gateway</span>
+          <span class="arch-chip chip-blue">alpine base</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-connector">↓ &nbsp; deploys to both environments</div>
+
+    <!-- Row 2: two destinations -->
+    <div class="arch-label">Deploy → Run → Observe</div>
+    <div class="arch-row">
+      <div class="arch-node">
+        <div class="arch-icon">🔷</div>
+        <div class="arch-node-title">k3d Local Cluster</div>
+        <div class="arch-node-sub">Lightweight Kubernetes cluster on the dev machine. Helm manages the full stack via a custom chart with sub-chart dependencies</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-blue">Kubernetes</span>
+          <span class="arch-chip chip-yellow">Helm v3</span>
+          <span class="arch-chip chip-blue">skyops namespace</span>
+        </div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-icon">⛵</div>
+        <div class="arch-node-title">Helm Chart</div>
+        <div class="arch-node-sub">Templated chart with values.yaml overrides. Deploys api-gateway, Prometheus, and Grafana as sub-charts in one command</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-yellow">prometheus sub-chart</span>
+          <span class="arch-chip chip-pink">grafana sub-chart</span>
+        </div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-icon">📊</div>
+        <div class="arch-node-title">Prometheus + Grafana</div>
+        <div class="arch-node-sub">Scrapes /metrics from api-gateway every 15s. Grafana shows request rate, P95 latency, error rate, and status codes</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-pink">PromQL</span>
+          <span class="arch-chip chip-pink">P95 latency</span>
+          <span class="arch-chip chip-yellow">auto-provisioned</span>
+        </div>
+      </div>
+      <div class="arch-arrow" style="font-size:14px;color:var(--border)">│</div>
+      <div class="arch-node" style="border-color:rgba(34,197,94,.3)">
+        <div class="arch-icon">☁️</div>
+        <div class="arch-node-title">Render (Live)</div>
+        <div class="arch-node-sub">Production cloud deployment. Auto-deploys on git push. render.yaml Blueprint manages the service as infrastructure-as-code</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-green">auto-deploy</span>
+          <span class="arch-chip chip-green">render.yaml</span>
+          <span class="arch-chip chip-blue">Neon PostgreSQL</span>
+        </div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node" style="border-color:rgba(34,211,238,.3)">
+        <div class="arch-icon">🎫</div>
+        <div class="arch-node-title">TicketDesk</div>
+        <div class="arch-node-sub">Live companion app monitored by SkyOps. FastAPI + Neon PostgreSQL with 18 seeded demo tickets</div>
+        <div class="arch-chips">
+          <span class="arch-chip chip-cyan">FastAPI</span>
+          <span class="arch-chip chip-blue">Neon DB</span>
+          <span class="arch-chip chip-green">monitored ✓</span>
+        </div>
+      </div>
     </div>
   </div>
 
