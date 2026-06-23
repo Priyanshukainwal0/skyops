@@ -13,9 +13,12 @@ services:
 
   - type: cron
     name: skyops-checks
-    runtime: image
-    image:
-      url: docker.io/curlimages/curl:latest
+    runtime: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: ./api-gateway
     schedule: "* * * * *"
     plan: free
-    command: curl -s -X POST https://skyops-api-8dn9.onrender.com/api/run-checks
+    dockerCommand: python -c "import urllib.request; urllib.request.urlopen('https://skyops-api-8dn9.onrender.com/api/run-checks', data=b'')"
+    envVars:
+      - key: DB_PATH
+        value: /tmp/skyops.db
