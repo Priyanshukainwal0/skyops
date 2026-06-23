@@ -3,276 +3,650 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SkyOps — Uptime Dashboard</title>
+<title>SkyOps — DevOps Portfolio</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0a0f1e; --surface: #111827; --card: #1e293b;
-    --border: #334155; --blue: #3b82f6; --green: #22c55e;
-    --red: #ef4444; --yellow: #f59e0b; --text: #f1f5f9;
-    --muted: #94a3b8;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --bg: #050a14;
+  --surface: #0d1526;
+  --card: #111e35;
+  --card2: #162240;
+  --border: #1e3358;
+  --blue: #3b82f6;
+  --blue2: #60a5fa;
+  --cyan: #22d3ee;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --purple: #a855f7;
+  --pink: #ec4899;
+  --orange: #f97316;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --muted2: #94a3b8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
 
-  nav { background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
-  .nav-brand { font-weight: 700; font-size: 18px; color: var(--blue); letter-spacing: -.3px; }
-  .nav-brand span { color: var(--text); }
-  .nav-status { font-size: 12px; color: var(--muted); }
+/* ── NAV ── */
+nav {
+  background: rgba(13,21,38,.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-brand { font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
+.nav-brand .sky { color: var(--cyan); }
+.nav-brand .ops { color: var(--blue); }
+.nav-links { display: flex; gap: 24px; font-size: 13px; color: var(--muted2); }
+.nav-links a:hover { color: var(--text); }
+.nav-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)} 50%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
 
-  main { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+/* ── LAYOUT ── */
+main { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
-  .stat-value { font-size: 28px; font-weight: 700; }
-  .stat-value.green { color: var(--green); }
-  .stat-value.red { color: var(--red); }
-  .stat-value.blue { color: var(--blue); }
+/* ── HERO ── */
+.hero {
+  text-align: center; padding: 60px 20px 50px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,.12) 0%, transparent 70%);
+  border: 1px solid var(--border); border-radius: 20px;
+  margin-bottom: 40px; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e3358' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: .4;
+}
+.hero-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.3); color: var(--blue2); padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-bottom: 20px; position: relative; }
+.hero h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1; margin-bottom: 16px; position: relative; }
+.hero h1 .grad { background: linear-gradient(135deg, var(--cyan), var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero p { color: var(--muted2); font-size: 16px; max-width: 560px; margin: 0 auto 28px; position: relative; line-height: 1.6; }
+.hero-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted2); }
+.btn-outline:hover { border-color: var(--blue); color: var(--blue2); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-danger { background: transparent; border: 1px solid rgba(239,68,68,.4); color: var(--red); }
+.btn-danger:hover { background: rgba(239,68,68,.1); }
 
-  .add-form { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px; margin-bottom: 28px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-  .add-form label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 4px; }
-  .add-form input { background: var(--surface); border: 1px solid var(--border); color: var(--text);
-    padding: 8px 12px; border-radius: 8px; font-size: 14px; width: 220px; outline: none; }
-  .add-form input:focus { border-color: var(--blue); }
-  .btn { padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
-  .btn-primary { background: var(--blue); color: #fff; }
-  .btn-primary:hover { background: #2563eb; }
-  .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 4px 10px; font-size: 12px; }
-  .btn-danger:hover { background: var(--red); color: #fff; }
+/* ── SECTION ── */
+.section { margin-bottom: 40px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.section-title::before { content: ''; display: block; width: 3px; height: 14px; background: var(--blue); border-radius: 2px; }
 
-  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
-  .services { display: grid; gap: 16px; }
+/* ── STAT CARDS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  position: relative; overflow: hidden;
+}
+.stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.stat-card.blue::after { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+.stat-card.green::after { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.stat-card.red::after { background: linear-gradient(90deg, var(--red), var(--orange)); }
+.stat-card.purple::after { background: linear-gradient(90deg, var(--purple), var(--pink)); }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+.stat-value { font-size: 32px; font-weight: 800; }
+.stat-value.c-blue { color: var(--blue2); }
+.stat-value.c-green { color: var(--green); }
+.stat-value.c-red { color: var(--red); }
+.stat-value.c-purple { color: var(--purple); }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-  .service-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .svc-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-  .svc-left { display: flex; align-items: center; gap: 14px; }
-  .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .dot-up { background: var(--green); box-shadow: 0 0 8px var(--green); }
-  .dot-down { background: var(--red); box-shadow: 0 0 8px var(--red); }
-  .dot-timeout { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
-  .dot-unknown { background: var(--border); }
-  .svc-name { font-weight: 600; font-size: 15px; }
-  .svc-url { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .svc-right { display: flex; align-items: center; gap: 16px; }
-  .badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-  .badge-up { background: rgba(34,197,94,.15); color: var(--green); }
-  .badge-down { background: rgba(239,68,68,.15); color: var(--red); }
-  .badge-timeout { background: rgba(245,158,11,.15); color: var(--yellow); }
-  .badge-unknown { background: rgba(148,163,184,.1); color: var(--muted); }
-  .latency { font-size: 13px; color: var(--muted); min-width: 64px; text-align: right; }
+/* ── PHASE CARDS ── */
+.phases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.phase-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  display: flex; gap: 16px; align-items: flex-start;
+  transition: border-color .2s, transform .2s;
+}
+.phase-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+.phase-icon {
+  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.ph1 { background: rgba(34,211,238,.1); }
+.ph2 { background: rgba(59,130,246,.1); }
+.ph3 { background: rgba(168,85,247,.1); }
+.ph4 { background: rgba(245,158,11,.1); }
+.ph5 { background: rgba(236,72,153,.1); }
+.ph6 { background: rgba(34,197,94,.1); }
+.phase-info { flex: 1; min-width: 0; }
+.phase-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; }
+.phase-name { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+.phase-desc { font-size: 12px; color: var(--muted2); line-height: 1.5; margin-bottom: 10px; }
+.phase-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.tag-blue { background: rgba(59,130,246,.15); color: var(--blue2); }
+.tag-cyan { background: rgba(34,211,238,.15); color: var(--cyan); }
+.tag-purple { background: rgba(168,85,247,.15); color: var(--purple); }
+.tag-green { background: rgba(34,197,94,.15); color: var(--green); }
+.tag-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+.tag-pink { background: rgba(236,72,153,.15); color: var(--pink); }
+.tag-orange { background: rgba(249,115,22,.15); color: var(--orange); }
+.phase-done { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--green); font-weight: 600; padding: 2px 10px; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25); border-radius: 999px; }
 
-  .chart-container { position: relative; height: 120px; width: 100%; }
-  .chart-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+/* ── TECH STACK ── */
+.stack-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.stack-item {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+  transition: border-color .15s, transform .15s;
+}
+.stack-item:hover { border-color: var(--blue); transform: translateY(-2px); }
+.stack-icon { font-size: 24px; }
+.stack-name { font-weight: 600; font-size: 14px; }
+.stack-role { font-size: 11px; color: var(--muted); }
 
-  .uptime-bar { display: flex; gap: 2px; margin-top: 12px; }
-  .uptime-tick { flex: 1; height: 6px; border-radius: 2px; }
-  .tick-up { background: var(--green); }
-  .tick-down { background: var(--red); }
-  .tick-timeout { background: var(--yellow); }
-  .tick-unknown { background: var(--border); }
+/* ── ARCHITECTURE ── */
+.arch-box {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted2);
+  line-height: 1.8; overflow-x: auto;
+}
+.arch-box .hl { color: var(--cyan); }
+.arch-box .hl2 { color: var(--blue2); }
+.arch-box .hl3 { color: var(--green); }
+.arch-box .hl4 { color: var(--yellow); }
 
-  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-  .refresh-bar { font-size: 11px; color: var(--muted); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+/* ── MONITORING ── */
+.service-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  margin-bottom: 16px;
+}
+.svc-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.svc-left { display: flex; align-items: center; gap: 14px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-up { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+.dot-down { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.dot-timeout { background: var(--yellow); }
+.dot-unknown { background: var(--muted); }
+.svc-name { font-weight: 700; font-size: 15px; }
+.svc-url { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+.svc-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.badge { padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.badge-up { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
+.badge-down { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.25); }
+.badge-timeout { background: rgba(245,158,11,.15); color: var(--yellow); border: 1px solid rgba(245,158,11,.25); }
+.badge-unknown { background: rgba(100,116,139,.1); color: var(--muted2); border: 1px solid var(--border); }
+.latency-val { font-size: 14px; font-weight: 700; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+.chart-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.chart-container { position: relative; height: 130px; width: 100%; }
+.uptime-bar { display: flex; gap: 3px; margin-top: 12px; }
+.uptime-tick { flex: 1; height: 6px; border-radius: 2px; cursor: pointer; }
+.tick-up { background: var(--green); }
+.tick-down { background: var(--red); }
+.tick-timeout { background: var(--yellow); }
+.tick-unknown { background: var(--border); }
+.uptime-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; }
+
+/* ── ADD FORM ── */
+.add-form {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px; margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+}
+.form-group label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.form-group input {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  padding: 9px 14px; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit;
+  width: 200px;
+}
+.form-group input:focus { border-color: var(--blue); }
+.form-group input.wide { width: 300px; }
+
+/* ── CI/CD ── */
+.cicd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.cicd-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.cicd-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cicd-name { font-weight: 600; font-size: 13px; }
+.cicd-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.cicd-pass { background: rgba(34,197,94,.15); color: var(--green); }
+.cicd-info { font-size: 11px; color: var(--muted2); line-height: 1.6; }
+
+/* ── FOOTER ── */
+footer { text-align: center; padding: 40px 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+footer span { color: var(--blue2); }
+
+/* ── RESPONSIVE ── */
+@media(max-width: 640px) {
+  .phases-grid { grid-template-columns: 1fr; }
+  .form-group input, .form-group input.wide { width: 100%; }
+  .add-form { flex-direction: column; }
+}
 </style>
 </head>
 <body>
+
+<!-- NAV -->
 <nav>
-  <div class="nav-brand">Sky<span>Ops</span></div>
-  <div class="nav-status" id="nav-status">Loading...</div>
+  <div class="nav-brand"><span class="sky">Sky</span><span class="ops">Ops</span></div>
+  <div class="nav-links">
+    <a href="#phases">Phases</a>
+    <a href="#stack">Stack</a>
+    <a href="#monitoring">Live</a>
+  </div>
+  <div class="nav-badge"><div class="pulse"></div><span id="nav-status">Connecting…</span></div>
 </nav>
+
 <main>
-  <div class="stats">
-    <div class="stat-card"><div class="stat-label">Total Services</div><div class="stat-value blue" id="stat-total">—</div></div>
-    <div class="stat-card"><div class="stat-label">Up</div><div class="stat-value green" id="stat-up">—</div></div>
-    <div class="stat-card"><div class="stat-label">Down / Timeout</div><div class="stat-value red" id="stat-down">—</div></div>
-    <div class="stat-card"><div class="stat-label">Avg Latency</div><div class="stat-value blue" id="stat-latency">—</div></div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">⚡ End-to-End DevOps Project</div>
+    <h1>Production-Grade<br><span class="grad">DevOps Platform</span></h1>
+    <p>A full 6-phase DevOps pipeline: containerised microservices, Kubernetes orchestration, Helm charts, CI/CD automation, observability stack, and live cloud deployment.</p>
+    <div class="hero-links">
+      <a href="https://github.com/Priyanshukainwal0/skyops" target="_blank" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/></svg>
+        GitHub Repo
+      </a>
+      <a href="https://ticketdesk-app.onrender.com" target="_blank" class="btn btn-outline">
+        🎫 TicketDesk App
+      </a>
+      <a href="/docs" target="_blank" class="btn btn-outline">
+        📖 API Docs
+      </a>
+    </div>
   </div>
 
-  <div class="add-form">
-    <div><label>Service Name</label><input id="inp-name" type="text" placeholder="My API" /></div>
-    <div><label>URL to Monitor</label><input id="inp-url" type="text" placeholder="https://example.com/health" style="width:300px" /></div>
-    <button class="btn btn-primary" onclick="addService()">+ Add Service</button>
+  <!-- LIVE STATS -->
+  <div class="section" id="monitoring">
+    <div class="section-header">
+      <div class="section-title">Live Monitoring</div>
+      <span style="font-size:11px;color:var(--muted)" id="last-refresh">—</span>
+    </div>
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card blue">
+        <div class="stat-label">Total Services</div>
+        <div class="stat-value c-blue" id="stat-total">—</div>
+        <div class="stat-sub">Monitored endpoints</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Operational</div>
+        <div class="stat-value c-green" id="stat-up">—</div>
+        <div class="stat-sub">Services up</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Incidents</div>
+        <div class="stat-value c-red" id="stat-down">—</div>
+        <div class="stat-sub">Down / timeout</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">Avg Latency</div>
+        <div class="stat-value c-purple" id="stat-latency">—</div>
+        <div class="stat-sub">Across all checks</div>
+      </div>
+    </div>
+
+    <!-- ADD SERVICE -->
+    <div class="add-form">
+      <div class="form-group"><label>Service Name</label><input id="inp-name" type="text" placeholder="My API" /></div>
+      <div class="form-group"><label>Health URL</label><input id="inp-url" class="wide" type="text" placeholder="https://example.com/health" /></div>
+      <button class="btn btn-primary" onclick="addService()">+ Add Service</button>
+    </div>
+
+    <div id="services-list"></div>
   </div>
 
-  <div class="refresh-bar">
-    <span class="section-title">Monitored Services</span>
-    <span id="last-refresh">—</span>
+  <!-- CI/CD PIPELINE STATUS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">CI/CD Pipeline</div>
+    </div>
+    <div class="cicd-grid">
+      <div class="cicd-card">
+        <div class="cicd-top">
+          <div class="cicd-name">🔄 Build & Test</div>
+          <div class="cicd-status cicd-pass">✓ Passing</div>
+        </div>
+        <div class="cicd-info">GitHub Actions · Run #3 green<br>Docker image build + pytest suite<br>Pushes to Docker Hub on merge</div>
+      </div>
+      <div class="cicd-card">
+        <div class="cicd-top">
+          <div class="cicd-name">🐳 Container Registry</div>
+          <div class="cicd-status cicd-pass">✓ Active</div>
+        </div>
+        <div class="cicd-info">Docker Hub · multi-stage build<br>api-gateway image · alpine base<br>Automated on every push to main</div>
+      </div>
+      <div class="cicd-card">
+        <div class="cicd-top">
+          <div class="cicd-name">☸️ Helm Deployment</div>
+          <div class="cicd-status cicd-pass">✓ Deployed</div>
+        </div>
+        <div class="cicd-info">k3d local cluster · skyops namespace<br>Helm v3 + sub-chart dependencies<br>Prometheus + Grafana as sub-charts</div>
+      </div>
+      <div class="cicd-card">
+        <div class="cicd-top">
+          <div class="cicd-name">☁️ Render Deployment</div>
+          <div class="cicd-status cicd-pass">✓ Live</div>
+        </div>
+        <div class="cicd-info">Auto-deploy on git push<br>Neon PostgreSQL (persistent)<br>render.yaml Blueprint managed</div>
+      </div>
+    </div>
   </div>
-  <div class="services" id="services-list">
-    <div class="empty">Loading services...</div>
+
+  <!-- 6 PHASES -->
+  <div class="section" id="phases">
+    <div class="section-header">
+      <div class="section-title">6-Phase DevOps Pipeline</div>
+      <div style="font-size:12px;color:var(--green);font-weight:600">6 / 6 Complete ✓</div>
+    </div>
+    <div class="phases-grid">
+      <div class="phase-card">
+        <div class="phase-icon ph1">🐳</div>
+        <div class="phase-info">
+          <div class="phase-label">Phase 1</div>
+          <div class="phase-name">Docker Compose</div>
+          <div class="phase-desc">Multi-service containerisation with api-gateway and monitor-worker. Custom bridge networking, volume mounts, health checks, and environment-based config.</div>
+          <div class="phase-tags">
+            <span class="tag tag-cyan">Docker</span>
+            <span class="tag tag-blue">Compose</span>
+            <span class="tag tag-cyan">Networking</span>
+            <span class="phase-done">✓ Done</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-icon ph2">☸️</div>
+        <div class="phase-info">
+          <div class="phase-label">Phase 2</div>
+          <div class="phase-name">Kubernetes on k3d</div>
+          <div class="phase-desc">Full K8s manifests: Deployments, Services, ConfigMaps, Secrets, Ingress. Local k3d cluster with dedicated skyops namespace and resource limits.</div>
+          <div class="phase-tags">
+            <span class="tag tag-blue">Kubernetes</span>
+            <span class="tag tag-blue">k3d</span>
+            <span class="tag tag-cyan">Ingress</span>
+            <span class="tag tag-blue">RBAC</span>
+            <span class="phase-done">✓ Done</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-icon ph3">⚙️</div>
+        <div class="phase-info">
+          <div class="phase-label">Phase 3</div>
+          <div class="phase-name">GitHub Actions CI</div>
+          <div class="phase-desc">Automated CI pipeline on every push: lint, pytest, Docker build, and image push to Docker Hub. Matrix strategy, secrets management, and artefact caching.</div>
+          <div class="phase-tags">
+            <span class="tag tag-purple">GitHub Actions</span>
+            <span class="tag tag-purple">pytest</span>
+            <span class="tag tag-cyan">Docker Hub</span>
+            <span class="phase-done">✓ Done</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-icon ph4">⛵</div>
+        <div class="phase-info">
+          <div class="phase-label">Phase 4</div>
+          <div class="phase-name">Helm Chart</div>
+          <div class="phase-desc">Production Helm chart with templated values, sub-chart dependencies (Prometheus + Grafana), conditional includes, and values.yaml override patterns.</div>
+          <div class="phase-tags">
+            <span class="tag tag-yellow">Helm v3</span>
+            <span class="tag tag-yellow">Templating</span>
+            <span class="tag tag-blue">Sub-charts</span>
+            <span class="phase-done">✓ Done</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-icon ph5">📊</div>
+        <div class="phase-info">
+          <div class="phase-label">Phase 5</div>
+          <div class="phase-name">Prometheus + Grafana</div>
+          <div class="phase-desc">Full observability stack via Helm sub-charts. Custom Grafana dashboard with request rate, P95 latency, error rate, HTTP status heatmap. Auto-provisioned via ConfigMap.</div>
+          <div class="phase-tags">
+            <span class="tag tag-pink">Prometheus</span>
+            <span class="tag tag-orange">Grafana</span>
+            <span class="tag tag-pink">PromQL</span>
+            <span class="tag tag-yellow">Dashboards</span>
+            <span class="phase-done">✓ Done</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-icon ph6">🚀</div>
+        <div class="phase-info">
+          <div class="phase-label">Phase 6</div>
+          <div class="phase-name">Live Cloud Deployment</div>
+          <div class="phase-desc">Production deployment on Render with Docker runtime. Neon PostgreSQL (free, persistent) replacing SQLite. render.yaml Blueprint for infrastructure-as-code. Auto-deploy on git push.</div>
+          <div class="phase-tags">
+            <span class="tag tag-green">Render</span>
+            <span class="tag tag-blue">Neon PostgreSQL</span>
+            <span class="tag tag-green">IaC</span>
+            <span class="phase-done">✓ Done</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- TECH STACK -->
+  <div class="section" id="stack">
+    <div class="section-header">
+      <div class="section-title">Technology Stack</div>
+    </div>
+    <div class="stack-grid">
+      <div class="stack-item"><div class="stack-icon">🐳</div><div><div class="stack-name">Docker</div><div class="stack-role">Containerisation</div></div></div>
+      <div class="stack-item"><div class="stack-icon">☸️</div><div><div class="stack-name">Kubernetes</div><div class="stack-role">Orchestration</div></div></div>
+      <div class="stack-item"><div class="stack-icon">⛵</div><div><div class="stack-name">Helm</div><div class="stack-role">Package Manager</div></div></div>
+      <div class="stack-item"><div class="stack-icon">⚙️</div><div><div class="stack-name">GitHub Actions</div><div class="stack-role">CI/CD</div></div></div>
+      <div class="stack-item"><div class="stack-icon">📈</div><div><div class="stack-name">Prometheus</div><div class="stack-role">Metrics</div></div></div>
+      <div class="stack-item"><div class="stack-icon">📊</div><div><div class="stack-name">Grafana</div><div class="stack-role">Dashboards</div></div></div>
+      <div class="stack-item"><div class="stack-icon">⚡</div><div><div class="stack-name">FastAPI</div><div class="stack-role">Backend API</div></div></div>
+      <div class="stack-item"><div class="stack-icon">🐘</div><div><div class="stack-name">PostgreSQL</div><div class="stack-role">Database</div></div></div>
+      <div class="stack-item"><div class="stack-icon">☁️</div><div><div class="stack-name">Render</div><div class="stack-role">Cloud Hosting</div></div></div>
+      <div class="stack-item"><div class="stack-icon">🌿</div><div><div class="stack-name">Neon</div><div class="stack-role">Serverless DB</div></div></div>
+      <div class="stack-item"><div class="stack-icon">🔷</div><div><div class="stack-name">k3d</div><div class="stack-role">Local K8s</div></div></div>
+      <div class="stack-item"><div class="stack-icon">🐍</div><div><div class="stack-name">Python</div><div class="stack-role">Service Logic</div></div></div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">System Architecture</div>
+    </div>
+    <div class="arch-box">
+<span class="hl">┌─ Developer Machine ──────────────────────────────────────────────────┐</span>
+│                                                                        │
+│  <span class="hl2">git push</span> ──► <span class="hl">GitHub</span> ──► <span class="hl">GitHub Actions CI</span>                           │
+│                              │   ├─ lint + pytest                     │
+│                              │   ├─ docker build &amp; push ──► <span class="hl2">Docker Hub</span>  │
+│                              │   └─ ✓ green                           │
+│                              │                                        │
+│  <span class="hl3">k3d local cluster</span>            └──► <span class="hl3">Render auto-deploy</span>               │
+│  ├─ skyops namespace                  └─ api-gateway (Docker)         │
+│  ├─ Helm chart (skyops)                  └─ Neon PostgreSQL           │
+│  │   ├─ api-gateway Deployment                                        │
+│  │   ├─ Prometheus (sub-chart)   <span class="hl4">TicketDesk</span>                           │
+│  │   ├─ Grafana (sub-chart)      └─ FastAPI + Neon PostgreSQL         │
+│  │   └─ Ingress                      └─ monitored by SkyOps           │
+│  └─ kubectl / helm CLI                                                │
+<span class="hl">└────────────────────────────────────────────────────────────────────────┘</span>
+    </div>
+  </div>
+
 </main>
 
+<footer>
+  Built by <span>Priyanshu Kainwal</span> · SkyOps DevOps Platform · All 6 phases complete
+</footer>
+
 <script>
-  const API = window.API_URL || '';
-  const charts = {};
+const API = window.API_URL || '';
+const charts = {};
 
-  async function fetchServices() {
-    try {
-      const res = await fetch(`${API}/api/services`);
-      const data = await res.json();
-      await renderServices(data);
-      updateStats(data);
-      document.getElementById('last-refresh').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-      document.getElementById('nav-status').textContent = 'Connected';
-    } catch (e) {
-      document.getElementById('nav-status').textContent = 'API unreachable';
-    }
+async function fetchServices() {
+  try {
+    const res = await fetch(`${API}/api/services`);
+    const data = await res.json();
+    await renderServices(data);
+    updateStats(data);
+    document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    document.getElementById('nav-status').textContent = 'Live';
+  } catch(e) {
+    document.getElementById('nav-status').textContent = 'Offline';
   }
+}
 
-  function statusClass(s) {
-    if (s === 'up') return 'up';
-    if (s === 'down') return 'down';
-    if (s === 'timeout') return 'timeout';
-    return 'unknown';
+function sc(s) {
+  return s === 'up' ? 'up' : s === 'down' ? 'down' : s === 'timeout' ? 'timeout' : 'unknown';
+}
+
+async function renderServices(services) {
+  const el = document.getElementById('services-list');
+  if (!services.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">No services monitored yet. Add one above.</div>';
+    return;
   }
-
-  async function renderServices(services) {
-    const el = document.getElementById('services-list');
-    if (!services.length) {
-      el.innerHTML = '<div class="empty">No services added yet. Add one above.</div>';
-      return;
-    }
-
-    for (const s of services) {
-      const sc = statusClass(s.last_status);
-      const lat = s.last_latency_ms != null ? `${Math.round(s.last_latency_ms)}ms` : '—';
-      const cardId = `svc-card-${s.id}`;
-
-      if (!document.getElementById(cardId)) {
-        const div = document.createElement('div');
-        div.className = 'service-card';
-        div.id = cardId;
-        div.innerHTML = `
-          <div class="svc-header">
-            <div class="svc-left">
-              <div class="status-dot dot-${sc}" id="dot-${s.id}"></div>
-              <div>
-                <div class="svc-name">${esc(s.name)}</div>
-                <div class="svc-url">${esc(s.url)}</div>
-              </div>
-            </div>
-            <div class="svc-right">
-              <span class="latency" id="lat-${s.id}">${lat}</span>
-              <span class="badge badge-${sc}" id="badge-${s.id}">${s.last_status || 'pending'}</span>
-              <button class="btn btn-danger" onclick="deleteService(${s.id})">Remove</button>
+  for (const s of services) {
+    const cls = sc(s.last_status);
+    const lat = s.last_latency_ms != null ? Math.round(s.last_latency_ms) + 'ms' : '—';
+    const cardId = `svc-${s.id}`;
+    if (!document.getElementById(cardId)) {
+      const div = document.createElement('div');
+      div.className = 'service-card';
+      div.id = cardId;
+      div.innerHTML = `
+        <div class="svc-header">
+          <div class="svc-left">
+            <div class="status-dot dot-${cls}" id="dot-${s.id}"></div>
+            <div>
+              <div class="svc-name">${esc(s.name)}</div>
+              <div class="svc-url">${esc(s.url)}</div>
             </div>
           </div>
-          <div class="chart-label">Latency over last 30 checks (ms)</div>
-          <div class="chart-container"><canvas id="chart-${s.id}"></canvas></div>
-          <div class="uptime-bar" id="uptime-${s.id}"></div>`;
-        el.appendChild(div);
-      } else {
-        document.getElementById(`dot-${s.id}`).className = `status-dot dot-${sc}`;
-        document.getElementById(`lat-${s.id}`).textContent = lat;
-        const badge = document.getElementById(`badge-${s.id}`);
-        badge.className = `badge badge-${sc}`;
-        badge.textContent = s.last_status || 'pending';
-      }
-
-      await loadChart(s.id);
+          <div class="svc-right">
+            <span class="latency-val" id="lat-${s.id}">${lat}</span>
+            <span class="badge badge-${cls}" id="badge-${s.id}">${s.last_status || 'pending'}</span>
+            <button class="btn btn-danger btn-sm" onclick="deleteSvc(${s.id})">Remove</button>
+          </div>
+        </div>
+        <div class="chart-label">Response latency — last 30 checks</div>
+        <div class="chart-container"><canvas id="chart-${s.id}"></canvas></div>
+        <div class="uptime-bar" id="bar-${s.id}"></div>
+        <div class="uptime-label"><span>30 checks ago</span><span>now</span></div>`;
+      el.appendChild(div);
+    } else {
+      document.getElementById(`dot-${s.id}`).className = `status-dot dot-${cls}`;
+      document.getElementById(`lat-${s.id}`).textContent = lat;
+      const b = document.getElementById(`badge-${s.id}`);
+      b.className = `badge badge-${cls}`;
+      b.textContent = s.last_status || 'pending';
     }
-
-    // remove cards for deleted services
-    const ids = services.map(s => `svc-card-${s.id}`);
-    [...el.children].forEach(c => { if (!ids.includes(c.id)) c.remove(); });
+    await loadChart(s.id);
   }
+  const ids = services.map(s => `svc-${s.id}`);
+  [...el.children].forEach(c => { if (c.id && !ids.includes(c.id)) c.remove(); });
+}
 
-  async function loadChart(serviceId) {
-    try {
-      const res = await fetch(`${API}/api/checks/${serviceId}?limit=30`);
-      const checks = (await res.json()).reverse();
+async function loadChart(sid) {
+  try {
+    const res = await fetch(`${API}/api/checks/${sid}?limit=30`);
+    const checks = (await res.json()).reverse();
+    const labels = checks.map(c => new Date(c.checked_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+    const lats = checks.map(c => c.latency_ms != null ? Math.round(c.latency_ms) : null);
+    const ptColors = checks.map(c => c.status === 'up' ? '#22c55e' : c.status === 'down' ? '#ef4444' : '#f59e0b');
 
-      const labels = checks.map(c => new Date(c.checked_at).toLocaleTimeString());
-      const latencies = checks.map(c => c.latency_ms != null ? Math.round(c.latency_ms) : null);
+    const bar = document.getElementById(`bar-${sid}`);
+    if (bar) bar.innerHTML = checks.map(c =>
+      `<div class="uptime-tick tick-${sc(c.status)}" title="${c.status} · ${Math.round(c.latency_ms||0)}ms · ${new Date(c.checked_at).toLocaleTimeString()}"></div>`
+    ).join('');
 
-      // uptime bar
-      const bar = document.getElementById(`uptime-${serviceId}`);
-      if (bar) {
-        bar.innerHTML = checks.map(c => `<div class="uptime-tick tick-${statusClass(c.status)}" title="${c.status} @ ${new Date(c.checked_at).toLocaleTimeString()}"></div>`).join('');
-      }
+    const canvas = document.getElementById(`chart-${sid}`);
+    if (!canvas) return;
 
-      const canvas = document.getElementById(`chart-${serviceId}`);
-      if (!canvas) return;
-
-      if (charts[serviceId]) {
-        charts[serviceId].data.labels = labels;
-        charts[serviceId].data.datasets[0].data = latencies;
-        charts[serviceId].update('none');
-        return;
-      }
-
-      charts[serviceId] = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Latency (ms)',
-            data: latencies,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59,130,246,0.1)',
-            borderWidth: 2,
-            pointRadius: 3,
-            pointBackgroundColor: latencies.map((_, i) =>
-              checks[i]?.status === 'up' ? '#22c55e' : checks[i]?.status === 'down' ? '#ef4444' : '#f59e0b'
-            ),
-            tension: 0.4,
-            fill: true,
-            spanGaps: true,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: '#94a3b8', maxTicksLimit: 6, font: { size: 10 } }, grid: { color: '#1e293b' } },
-            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true }
-          }
+    if (charts[sid]) {
+      charts[sid].data.labels = labels;
+      charts[sid].data.datasets[0].data = lats;
+      charts[sid].data.datasets[0].pointBackgroundColor = ptColors;
+      charts[sid].update('none');
+      return;
+    }
+    charts[sid] = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Latency (ms)',
+          data: lats,
+          borderColor: '#22d3ee',
+          backgroundColor: 'rgba(34,211,238,0.07)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: ptColors,
+          pointBorderWidth: 0,
+          tension: 0.4,
+          fill: true,
+          spanGaps: true,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+          backgroundColor: '#0d1526', titleColor: '#94a3b8', bodyColor: '#e2e8f0',
+          borderColor: '#1e3358', borderWidth: 1,
+          callbacks: { label: ctx => ` ${ctx.parsed.y}ms` }
+        }},
+        scales: {
+          x: { ticks: { color: '#64748b', maxTicksLimit: 6, font:{size:10} }, grid: { color: '#111e35' } },
+          y: { ticks: { color: '#64748b', font:{size:10} }, grid: { color: '#111e35' }, beginAtZero: true,
+               title: { display: true, text: 'ms', color: '#64748b', font:{size:10} } }
         }
-      });
-    } catch (e) {}
-  }
-
-  function updateStats(services) {
-    const up = services.filter(s => s.last_status === 'up').length;
-    const down = services.filter(s => s.last_status === 'down' || s.last_status === 'timeout').length;
-    const latencies = services.filter(s => s.last_latency_ms != null).map(s => s.last_latency_ms);
-    const avg = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : null;
-    document.getElementById('stat-total').textContent = services.length;
-    document.getElementById('stat-up').textContent = up;
-    document.getElementById('stat-down').textContent = down;
-    document.getElementById('stat-latency').textContent = avg != null ? `${avg}ms` : '—';
-  }
-
-  async function addService() {
-    const name = document.getElementById('inp-name').value.trim();
-    const url = document.getElementById('inp-url').value.trim();
-    if (!name || !url) return alert('Both name and URL are required.');
-    await fetch(`${API}/api/services`, {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ name, url }),
+      }
     });
-    document.getElementById('inp-name').value = '';
-    document.getElementById('inp-url').value = '';
-    fetchServices();
-  }
+  } catch(e) {}
+}
 
-  async function deleteService(id) {
-    if (!confirm('Remove this service?')) return;
-    await fetch(`${API}/api/services/${id}`, { method: 'DELETE' });
-    document.getElementById(`svc-card-${id}`)?.remove();
-    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-    fetchServices();
-  }
+function updateStats(services) {
+  const up = services.filter(s => s.last_status === 'up').length;
+  const down = services.filter(s => ['down','timeout'].includes(s.last_status)).length;
+  const lats = services.filter(s => s.last_latency_ms != null).map(s => s.last_latency_ms);
+  const avg = lats.length ? Math.round(lats.reduce((a,b)=>a+b,0)/lats.length) : null;
+  document.getElementById('stat-total').textContent = services.length;
+  document.getElementById('stat-up').textContent = up;
+  document.getElementById('stat-down').textContent = down;
+  document.getElementById('stat-latency').textContent = avg != null ? avg+'ms' : '—';
+}
 
-  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
+async function addService() {
+  const name = document.getElementById('inp-name').value.trim();
+  const url = document.getElementById('inp-url').value.trim();
+  if (!name || !url) return alert('Both fields required.');
+  await fetch(`${API}/api/services`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, url})
+  });
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-url').value = '';
   fetchServices();
-  setInterval(fetchServices, 15000);
+}
+
+async function deleteSvc(id) {
+  if (!confirm('Remove this service?')) return;
+  await fetch(`${API}/api/services/${id}`, {method:'DELETE'});
+  document.getElementById(`svc-${id}`)?.remove();
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  fetchServices();
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+fetchServices();
+setInterval(fetchServices, 15000);
 </script>
 </body>
 </html>
