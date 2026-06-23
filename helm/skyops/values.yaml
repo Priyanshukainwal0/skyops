@@ -44,3 +44,69 @@ ingress:
   host: skyops.local
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+
+# ── Prometheus (sub-chart) ────────────────────────────────────────────────────
+prometheus:
+  enabled: true
+  alertmanager:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  server:
+    global:
+      scrape_interval: 15s
+    persistentVolume:
+      enabled: false
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    extraScrapeConfigs: |
+      - job_name: skyops-api-gateway
+        static_configs:
+          - targets: ['api-gateway.skyops.svc.cluster.local:8000']
+        metrics_path: /metrics
+        scrape_interval: 15s
+
+# ── Grafana (sub-chart) ───────────────────────────────────────────────────────
+grafana:
+  enabled: true
+  adminPassword: "skyops-admin"
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "300m"
+      memory: "256Mi"
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://skyops-prometheus-server
+          isDefault: true
+          access: proxy
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: skyops
+          orgId: 1
+          folder: SkyOps
+          type: file
+          disableDeletion: false
+          options:
+            path: /var/lib/grafana/dashboards/skyops
+  dashboardsConfigMaps:
+    skyops: skyops-grafana-dashboard

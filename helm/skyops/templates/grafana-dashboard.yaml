@@ -1,0 +1,120 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skyops-grafana-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "skyops.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  skyops.json: |
+    {
+      "title": "SkyOps — Uptime & Latency",
+      "uid": "skyops-main",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Total HTTP Requests",
+          "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+          "targets": [
+            {
+              "expr": "sum(increase(http_requests_total{job=\"skyops-api-gateway\"}[1h]))",
+              "legendFormat": "Requests (1h)"
+            }
+          ],
+          "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } } }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Error Rate (5xx)",
+          "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{job=\"skyops-api-gateway\",status=~\"5..\"}[5m])) or vector(0)",
+              "legendFormat": "5xx/s"
+            }
+          ],
+          "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "unit": "reqps", "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.1 }] } } }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Avg Request Latency",
+          "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+          "targets": [
+            {
+              "expr": "rate(http_request_duration_seconds_sum{job=\"skyops-api-gateway\"}[5m]) / rate(http_request_duration_seconds_count{job=\"skyops-api-gateway\"}[5m])",
+              "legendFormat": "Avg Latency"
+            }
+          ],
+          "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "unit": "s", "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 2 }] } } }
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "API Gateway Replicas",
+          "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+          "targets": [
+            {
+              "expr": "count(up{job=\"skyops-api-gateway\"} == 1) or vector(0)",
+              "legendFormat": "Replicas Up"
+            }
+          ],
+          "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 1 }, { "color": "green", "value": 2 }] } } }
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Request Rate by Endpoint",
+          "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "sum by (handler) (rate(http_requests_total{job=\"skyops-api-gateway\"}[2m]))",
+              "legendFormat": "{{`{{ handler }}`}}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } } },
+          "options": { "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "P95 Latency by Endpoint",
+          "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by (handler, le) (rate(http_request_duration_seconds_bucket{job=\"skyops-api-gateway\"}[5m])))",
+              "legendFormat": "p95 {{`{{ handler }}`}}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "palette-classic" } } },
+          "options": { "tooltip": { "mode": "multi" } }
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "HTTP Status Codes Over Time",
+          "gridPos": { "x": 0, "y": 12, "w": 24, "h": 7 },
+          "targets": [
+            {
+              "expr": "sum by (status) (rate(http_requests_total{job=\"skyops-api-gateway\"}[2m]))",
+              "legendFormat": "HTTP {{`{{ status }}`}}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } } },
+          "options": { "tooltip": { "mode": "multi" } }
+        }
+      ]
+    }
+{{- end }}
