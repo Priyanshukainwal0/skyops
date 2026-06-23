@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 import pathlib
 import sqlite3
+import threading
 import time
 import urllib.request
 from contextlib import contextmanager
@@ -36,6 +37,38 @@ Instrumentator().instrument(app).expose(app)
 
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+def _background_checker():
+    interval = int(os.environ.get("CHECK_INTERVAL", "60"))
+    timeout = int(os.environ.get("REQUEST_TIMEOUT", "10"))
+    time.sleep(10)  # wait for app to fully start
+    while True:
+        try:
+            with get_db() as conn:
+                services = conn.execute("SELECT id, url FROM services").fetchall()
+            for svc in services:
+                start = time.monotonic()
+                try:
+                    req = urllib.request.Request(svc["url"], method="GET")
+                    req.add_header("User-Agent", "SkyOps-Monitor/1.0")
+                    with urllib.request.urlopen(req, timeout=timeout) as resp:
+                        status = "up" if resp.status < 500 else "down"
+                except Exception:
+                    status = "down"
+                latency_ms = round((time.monotonic() - start) * 1000, 2)
+                now = datetime.now(timezone.utc).isoformat()
+                with get_db() as conn:
+                    conn.execute(
+                        "INSERT INTO checks (service_id, status, latency_ms, checked_at) VALUES (?, ?, ?, ?)",
+                        (svc["id"], status, latency_ms, now),
+                    )
+        except Exception:
+            pass
+        time.sleep(interval)
+
+
+threading.Thread(target=_background_checker, daemon=True).start()
 
 @app.get("/", include_in_schema=False)
 def dashboard():
