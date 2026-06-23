@@ -5,6 +5,7 @@ Stores monitored services and receives health-check reports from the monitor-wor
 from __future__ import annotations
 
 import os
+import pathlib
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -12,10 +13,13 @@ from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel, HttpUrl
 
 DB_PATH = os.environ.get("DB_PATH", "skyops.db")
+STATIC_DIR = pathlib.Path(__file__).parent / "static"
 
 app = FastAPI(title="SkyOps API", version="1.0.0")
 
@@ -27,6 +31,16 @@ app.add_middleware(
 )
 
 Instrumentator().instrument(app).expose(app)
+
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+@app.get("/", include_in_schema=False)
+def dashboard():
+    index = STATIC_DIR / "index.html"
+    if index.exists():
+        return FileResponse(index)
+    return {"status": "ok", "docs": "/docs"}
 
 
 # ── DB ────────────────────────────────────────────────────────────────────────

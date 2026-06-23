@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: skyops-api
+    runtime: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: ./api-gateway
+    plan: free
+    envVars:
+      - key: DB_PATH
+        value: /tmp/skyops.db
+
+  - type: worker
+    name: skyops-monitor
+    runtime: docker
+    dockerfilePath: ./monitor-worker/Dockerfile
+    dockerContext: ./monitor-worker
+    plan: free
+    envVars:
+      - key: API_URL
+        value: https://skyops-api.onrender.com
+      - key: CHECK_INTERVAL
+        value: "60"
+      - key: REQUEST_TIMEOUT
+        value: "10"
