@@ -56,6 +56,12 @@ prometheus:
     enabled: false
   prometheus-node-exporter:
     enabled: false
+  extraScrapeConfigs: |
+    - job_name: skyops-api-gateway
+      static_configs:
+        - targets: ['api-gateway.skyops.svc.cluster.local:8000']
+      metrics_path: /metrics
+      scrape_interval: 15s
   server:
     global:
       scrape_interval: 15s
@@ -68,12 +74,6 @@ prometheus:
       limits:
         cpu: "500m"
         memory: "512Mi"
-    extraScrapeConfigs: |
-      - job_name: skyops-api-gateway
-        static_configs:
-          - targets: ['api-gateway.skyops.svc.cluster.local:8000']
-        metrics_path: /metrics
-        scrape_interval: 15s
 
 # ── Grafana (sub-chart) ───────────────────────────────────────────────────────
 grafana:
