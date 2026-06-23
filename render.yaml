@@ -10,3 +10,7 @@ services:
         value: /tmp/skyops.db
       - key: REQUEST_TIMEOUT
         value: "10"
+      - key: CHECK_INTERVAL
+        value: "60"
+      - key: DEFAULT_SERVICES
+        value: "TicketDesk|https://ticketdesk-app.onrender.com/health"

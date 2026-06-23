@@ -70,6 +70,30 @@ def _background_checker():
 
 threading.Thread(target=_background_checker, daemon=True).start()
 
+
+def seed_default_services():
+    """Pre-seed services from DEFAULT_SERVICES env var on every startup."""
+    default = os.environ.get("DEFAULT_SERVICES", "")
+    if not default:
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    for entry in default.split(","):
+        entry = entry.strip()
+        if "|" not in entry:
+            continue
+        name, url = entry.split("|", 1)
+        with get_db() as conn:
+            existing = conn.execute("SELECT id FROM services WHERE name=?", (name.strip(),)).fetchone()
+            if not existing:
+                conn.execute(
+                    "INSERT INTO services (name, url, created_at) VALUES (?, ?, ?)",
+                    (name.strip(), url.strip(), now),
+                )
+
+
+seed_default_services()
+
+
 @app.get("/", include_in_schema=False)
 def dashboard():
     index = STATIC_DIR / "index.html"
