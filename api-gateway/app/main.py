@@ -7,6 +7,8 @@ from __future__ import annotations
 import os
 import pathlib
 import sqlite3
+import time
+import urllib.request
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -203,3 +205,36 @@ def get_checks(service_id: int, limit: int = 50):
             (service_id, limit),
         ).fetchall()
     return [CheckOut(**dict(r)) for r in rows]
+
+
+@app.post("/api/run-checks", tags=["ops"])
+def run_checks():
+    """Check every registered service and record results. Called by Render Cron Job."""
+    with get_db() as conn:
+        services = conn.execute("SELECT id, url FROM services").fetchall()
+
+    results = []
+    timeout = int(os.environ.get("REQUEST_TIMEOUT", "10"))
+
+    for svc in services:
+        start = time.monotonic()
+        try:
+            req = urllib.request.Request(svc["url"], method="GET")
+            req.add_header("User-Agent", "SkyOps-Monitor/1.0")
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                status = "up" if resp.status < 500 else "down"
+        except Exception:
+            status = "down"
+
+        latency_ms = round((time.monotonic() - start) * 1000, 2)
+        now = datetime.now(timezone.utc).isoformat()
+
+        with get_db() as conn:
+            conn.execute(
+                "INSERT INTO checks (service_id, status, latency_ms, checked_at) VALUES (?, ?, ?, ?)",
+                (svc["id"], status, latency_ms, now),
+            )
+
+        results.append({"service_id": svc["id"], "status": status, "latency_ms": latency_ms})
+
+    return {"checked": len(results), "results": results}
